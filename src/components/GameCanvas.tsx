@@ -1,0 +1,81 @@
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { GameEngine } from '../game/GameEngine';
+import { STEP } from '../game/config';
+import type { MatchOptions, MatchSnapshot } from '../game/types';
+
+interface GameCanvasProps {
+  options: MatchOptions;
+  paused: boolean;
+  restartKey: number;
+  onSnapshot: (snapshot: MatchSnapshot) => void;
+}
+
+export interface GameCanvasHandle {
+  setMove: (x: number, y: number) => void;
+  kick: (strong?: boolean) => void;
+}
+
+export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function GameCanvas(
+  { options, paused, restartKey, onSnapshot },
+  ref,
+) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineRef = useRef<GameEngine | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
+    const engine = new GameEngine(context, options);
+    engineRef.current = engine;
+    let frame = 0;
+    let previous = performance.now();
+    let accumulator = 0;
+    let reportTimer = 0;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(devicePixelRatio, options.quality);
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+    };
+    const keyDown = (event: KeyboardEvent) => {
+      if (['Space', 'ArrowUp', 'ArrowDown'].includes(event.code)) event.preventDefault();
+      engine.key(event.code, true);
+    };
+    const keyUp = (event: KeyboardEvent) => engine.key(event.code, false);
+    const loop = (now: number) => {
+      accumulator += Math.min(0.05, (now - previous) / 1000);
+      previous = now;
+      while (accumulator >= STEP) { engine.update(STEP); accumulator -= STEP; reportTimer += STEP; }
+      engine.draw();
+      if (reportTimer > 0.1) { onSnapshot(engine.snapshot()); reportTimer = 0; }
+      frame = requestAnimationFrame(loop);
+    };
+    resize();
+    addEventListener('resize', resize);
+    addEventListener('keydown', keyDown);
+    addEventListener('keyup', keyUp);
+    frame = requestAnimationFrame(loop);
+    return () => {
+      cancelAnimationFrame(frame);
+      removeEventListener('resize', resize);
+      removeEventListener('keydown', keyDown);
+      removeEventListener('keyup', keyUp);
+    };
+  }, [onSnapshot, options, restartKey]);
+
+  useImperativeHandle(ref, () => ({
+    setMove: (x, y) => engineRef.current?.setMove(x, y),
+    kick: (strong = false) => engineRef.current?.queueKick(strong),
+  }), []);
+
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    const isPaused = engine.snapshot().state === 'paused';
+    if (paused !== isPaused) engine.pause();
+  }, [paused]);
+
+  return <canvas ref={canvasRef} className="game-canvas" aria-label="Футбольное поле" />;
+});
