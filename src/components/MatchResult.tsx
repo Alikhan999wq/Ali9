@@ -17,7 +17,7 @@ export function MatchResult({ match, onRestart }: MatchResultProps) {
     ['Передачи', ...match.stats.passes],
     ['Точность', ...match.stats.passAttempts.map((value, team) => value ? `${Math.round(match.stats.passes[team] / value * 100)}%` : '0%')],
     ['Фолы', ...match.stats.fouls], ['Карточки', ...match.stats.cards],
-    ['Офсайды', ...match.stats.offsides], ['Угловые', ...match.stats.corners],
+    ['Офсайды', ...match.stats.offsides],
   ];
 
   return (

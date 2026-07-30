@@ -21,7 +21,7 @@ export class AIPlayer {
     ? game.ball
     : { x: player.homeX + (game.ball.x - 600) * .2, y: player.homeY + (game.ball.y - 350) * .25 };
   player.move(target.x - player.x, target.y - player.y, dt, level.speed);
-  if (distance(player, game.ball) >= 55) return;
+  if (distance(player, game.ball) >= 55 || Math.random() > dt * level.reaction) return;
   const aim = direction(player.team ? -1 : 1, (350 - player.y) / (350 / level.accuracy));
   player.faceX = aim.x;
   player.faceY = aim.y;

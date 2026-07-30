@@ -13,7 +13,6 @@ export interface Stats {
   fouls: TeamStat;
   cards: TeamStat;
   offsides: TeamStat;
-  corners: TeamStat;
 }
 
 export interface MatchEvent {
@@ -36,5 +35,10 @@ export interface MatchOptions {
   team: number;
   difficulty: Difficulty;
   volume: number;
+  effectsEnabled: boolean;
+  commentaryVolume: number;
+  commentaryEnabled: boolean;
+  crowdVolume: number;
+  crowdEnabled: boolean;
   quality: Quality;
 }

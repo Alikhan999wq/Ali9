@@ -3,15 +3,22 @@ export const MATCH_SECONDS = 90;
 export const STEP = 1 / 60;
 
 export const TEAMS = [
-  { name: 'Север', short: 'FC', primary: '#246bff', secondary: '#dce9ff' },
-  { name: 'Искра', short: 'IK', primary: '#f04e3e', secondary: '#ffd23d' },
-  { name: 'Тайга', short: 'TG', primary: '#159a68', secondary: '#effff7' },
+  { id: 'imperial-madrid', name: 'VAR Madrid', short: 'VM', symbol: '♛', primary: '#f4f1e8', secondary: '#c7a648', away: '#191c24', description: 'Точный контроль мяча и королевский стиль атаки.' },
+  { id: 'london-royals', name: 'London Royals', short: 'LR', symbol: '♜', primary: '#5b2a86', secondary: '#e1c05a', away: '#f5f1e7', description: 'Дисциплина, силовой футбол и опасные стандарты.' },
+  { id: 'milano-stars', name: 'Milano Stars', short: 'MS', symbol: '★', primary: '#15171c', secondary: '#d8b44a', away: '#f0eee7', description: 'Итальянская защита и быстрые контратаки.' },
+  { id: 'paris-empire', name: 'Paris Empire', short: 'PE', symbol: '◆', primary: '#152b66', secondary: '#d53b50', away: '#e9e5dc', description: 'Техника, скорость и эффектные комбинации.' },
+  { id: 'barcelona-titans', name: 'Barcelona Titans', short: 'BT', symbol: 'T', primary: '#8e2038', secondary: '#294a9a', away: '#f1c94b', description: 'Долгое владение и постоянное движение без мяча.' },
+  { id: 'munich-eagles', name: 'Munich Eagles', short: 'ME', symbol: '▲', primary: '#b92732', secondary: '#f2eee7', away: '#232a36', description: 'Высокий прессинг и мощные удары издали.' },
+  { id: 'lisbon-phoenix', name: 'Lisbon Phoenix', short: 'LP', symbol: '✦', primary: '#12814e', secondary: '#d7b548', away: '#f3eee3', description: 'Молодая команда с резкими фланговыми атаками.' },
+  { id: 'amsterdam-legends', name: 'Amsterdam Legends', short: 'AL', symbol: 'A', primary: '#df3e32', secondary: '#f4f0e8', away: '#20252d', description: 'Свободные позиции и универсальные футболисты.' },
+  { id: 'turin-dynasty', name: 'Turin Dynasty', short: 'TD', symbol: 'D', primary: '#17191d', secondary: '#ece9df', away: '#d4b555', description: 'Надёжная оборона и хладнокровное завершение.' },
+  { id: 'rome-united', name: 'Rome United', short: 'RU', symbol: 'R', primary: '#7f202d', secondary: '#e3a737', away: '#eee9df', description: 'Характер, борьба и давление до финального свистка.' },
 ] as const;
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type Quality = 1 | 1.5 | 2;
-export const AI_LEVELS: Record<Difficulty, { speed: number; accuracy: number }> = {
-  easy: { speed: 0.72, accuracy: 0.58 },
-  normal: { speed: 0.88, accuracy: 0.76 },
-  hard: { speed: 1.05, accuracy: 0.9 },
+export const AI_LEVELS: Record<Difficulty, { speed: number; accuracy: number; reaction: number }> = {
+  easy: { speed: 0.5, accuracy: 0.38, reaction: 0.8 },
+  normal: { speed: 0.65, accuracy: 0.54, reaction: 1.35 },
+  hard: { speed: 0.8, accuracy: 0.68, reaction: 2 },
 };

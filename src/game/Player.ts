@@ -28,7 +28,7 @@ export class Player {
 
   move(dx: number, dy: number, dt: number, speed = 1) {
     const active = Math.abs(dx) + Math.abs(dy) > 0.01;
-    const target = 245 * speed;
+    const target = 170 * speed;
     const aim = direction(dx, dy);
     const blend = Math.min(1, 950 * dt / target);
     if (active) {
@@ -47,12 +47,14 @@ export class Player {
     this.falling = Math.max(0, this.falling - dt);
   }
 
-  kick(ball: Ball, strong: boolean) {
+  getAimDirection() {
+    return direction(this.faceX, this.faceY);
+  }
+
+  kick(ball: Ball, aimDirection = this.getAimDirection(), power = 570) {
     if (distance(this, ball) > 58 || this.kickTime > 0) return false;
-    const aim = direction(this.faceX, this.faceY);
-    const power = strong ? 820 : 570;
-    ball.vx = aim.x * power + this.vx * 0.25;
-    ball.vy = aim.y * power + this.vy * 0.25;
+    ball.vx = aimDirection.x * power + this.vx * 0.25;
+    ball.vy = aimDirection.y * power + this.vy * 0.25;
     ball.lastTouch = this.team;
     this.kickTime = 0.2;
     return true;

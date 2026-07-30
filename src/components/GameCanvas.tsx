@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { GameEngine } from '../game/GameEngine';
-import { STEP } from '../game/config';
+import { FIELD, STEP } from '../game/config';
 import type { MatchOptions, MatchSnapshot } from '../game/types';
 
 interface GameCanvasProps {
@@ -12,7 +12,8 @@ interface GameCanvasProps {
 
 export interface GameCanvasHandle {
   setMove: (x: number, y: number) => void;
-  kick: (strong?: boolean) => void;
+  setAim: (x: number, y: number) => void;
+  kick: () => void;
 }
 
 export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function GameCanvas(
@@ -44,6 +45,15 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
       engine.key(event.code, true);
     };
     const keyUp = (event: KeyboardEvent) => engine.key(event.code, false);
+    const pointerMove = (event: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const canvasX = (event.clientX - rect.left) * canvas.width / rect.width;
+      const canvasY = (event.clientY - rect.top) * canvas.height / rect.height;
+      const scale = Math.min(canvas.width / FIELD.width, canvas.height / FIELD.height);
+      const offsetX = (canvas.width - FIELD.width * scale) / 2;
+      const offsetY = (canvas.height - FIELD.height * scale) / 2;
+      engine.setAimPoint((canvasX - offsetX) / scale, (canvasY - offsetY) / scale);
+    };
     const loop = (now: number) => {
       accumulator += Math.min(0.05, (now - previous) / 1000);
       previous = now;
@@ -56,18 +66,22 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
     addEventListener('resize', resize);
     addEventListener('keydown', keyDown);
     addEventListener('keyup', keyUp);
+    canvas.addEventListener('pointermove', pointerMove);
     frame = requestAnimationFrame(loop);
     return () => {
       cancelAnimationFrame(frame);
+      engine.destroy();
       removeEventListener('resize', resize);
       removeEventListener('keydown', keyDown);
       removeEventListener('keyup', keyUp);
+      canvas.removeEventListener('pointermove', pointerMove);
     };
   }, [onSnapshot, options, restartKey]);
 
   useImperativeHandle(ref, () => ({
     setMove: (x, y) => engineRef.current?.setMove(x, y),
-    kick: (strong = false) => engineRef.current?.queueKick(strong),
+    setAim: (x, y) => engineRef.current?.setAimDirection(x, y),
+    kick: () => engineRef.current?.queueKick(),
   }), []);
 
   useEffect(() => {

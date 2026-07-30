@@ -21,6 +21,17 @@ export function renderField(context: CanvasRenderingContext2D) {
   const goalTop = (height - goalWidth) / 2;
   context.strokeRect(margin - 48, goalTop, 48, goalWidth);
   context.strokeRect(width - margin, goalTop, 48, goalWidth);
+  context.fillStyle = '#fff';
+  for (const x of [margin, width - margin]) {
+    for (const y of [goalTop, goalTop + goalWidth]) {
+      context.beginPath(); context.arc(x, y, 7, 0, Math.PI * 2); context.fill();
+    }
+  }
+  context.lineWidth = 7;
+  context.beginPath();
+  context.moveTo(margin - 48, goalTop); context.lineTo(margin - 48, goalTop + goalWidth);
+  context.moveTo(width - margin + 48, goalTop); context.lineTo(width - margin + 48, goalTop + goalWidth);
+  context.stroke();
 }
 
 export function renderPlayer(context: CanvasRenderingContext2D, player: Player, time: number, teamIndex: number) {
@@ -58,6 +69,20 @@ export function renderBall(context: CanvasRenderingContext2D, ball: Ball) {
   context.restore();
 }
 
+function renderAimArrow(context: CanvasRenderingContext2D, ball: Ball, aim: { x: number; y: number }) {
+  context.save();
+  context.translate(ball.x, ball.y);
+  context.rotate(Math.atan2(aim.y, aim.x));
+  context.lineCap = 'round'; context.lineJoin = 'round';
+  context.beginPath();
+  context.moveTo(0, 0); context.lineTo(64, 0); context.lineTo(49, -11);
+  context.moveTo(64, 0); context.lineTo(49, 11);
+  context.strokeStyle = '#122018'; context.lineWidth = 11; context.stroke();
+  context.strokeStyle = '#fff36a'; context.lineWidth = 6;
+  context.shadowColor = '#fff36a'; context.shadowBlur = 12; context.stroke();
+  context.restore();
+}
+
 export function renderReferee(context: CanvasRenderingContext2D, referee: Referee) {
   context.save(); context.translate(referee.x, referee.y);
   context.fillStyle = '#ffc52b'; context.beginPath(); context.arc(0, 0, 13, 0, Math.PI * 2); context.fill();
@@ -77,6 +102,7 @@ export function renderMatch(
   elapsed: number,
   homeTeam: number,
   awayTeam: number,
+  aim: { x: number; y: number } | null,
 ) {
   const canvas = context.canvas;
   const scale = Math.min(canvas.width / FIELD.width, canvas.height / FIELD.height);
@@ -88,6 +114,7 @@ export function renderMatch(
   renderField(context);
   players.forEach((player) => renderPlayer(context, player, elapsed, player.team ? awayTeam : homeTeam));
   renderBall(context, ball);
+  if (aim) renderAimArrow(context, ball, aim);
   renderReferee(context, referee);
   context.restore();
 }
