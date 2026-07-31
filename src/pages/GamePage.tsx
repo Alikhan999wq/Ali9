@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'wouter';
 import { GameCanvas, type GameCanvasHandle } from '../components/GameCanvas';
 import { GameHud } from '../components/GameHud';
 import { MatchEventOverlay } from '../components/MatchEventOverlay';
@@ -52,7 +53,12 @@ export function GamePage() {
   };
   return (
     <main className="game-page">
-      <GameHud match={match} teamNames={[TEAMS[options.team].name, TEAMS[opponent].name]} onPause={() => setPaused((value) => !value)} />
+      <GameHud
+        match={match}
+        teamNames={[TEAMS[options.team].name, TEAMS[opponent].name]}
+        teamSymbols={[TEAMS[options.team].symbol, TEAMS[opponent].symbol]}
+        onPause={() => setPaused((value) => !value)}
+      />
       <GameCanvas ref={canvas} options={stableOptions} paused={paused} restartKey={restartKey} onSnapshot={updateSnapshot} />
       <MobileControls
         onMove={(x, y) => canvas.current?.setMove(x, y)}
@@ -61,7 +67,16 @@ export function GamePage() {
       />
       <div className="rotate-phone"><span>↻</span><b>Поверните телефон</b><small>Играть удобнее в альбомном режиме</small></div>
       {match.event && <MatchEventOverlay event={match.event} />}
-      {paused && <section className="match-modal"><p className="eyebrow">МАТЧ ОСТАНОВЛЕН</p><h2>Пауза</h2><button onClick={() => setPaused(false)}>Продолжить</button></section>}
+      {paused && (
+        <section className="match-modal">
+          <p className="eyebrow">МАТЧ ОСТАНОВЛЕН</p>
+          <h2>Пауза</h2>
+          <div className="match-modal__actions">
+            <button type="button" onClick={() => setPaused(false)}>Продолжить</button>
+            <Link href="/" className="secondary-button">Назад в меню</Link>
+          </div>
+        </section>
+      )}
       {match.state === 'ended' && <MatchResult match={match} onRestart={restart} />}
     </main>
   );

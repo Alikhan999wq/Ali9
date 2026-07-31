@@ -21,7 +21,7 @@ export function MatchResult({ match, onRestart }: MatchResultProps) {
   ];
 
   return (
-    <section className="match-modal">
+    <section className="match-modal match-modal--result">
       <p className="eyebrow">ФИНАЛЬНЫЙ СВИСТОК</p>
       <h2>{title}</h2>
       <strong className="match-modal__score">{match.score[0]} — {match.score[1]}</strong>
