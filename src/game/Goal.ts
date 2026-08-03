@@ -3,7 +3,7 @@ import type { Ball } from './Ball';
 
 const POST_RADIUS = 7;
 const GOAL_DEPTH = 48;
-const BARRIER_OFFSET = 18;
+const BOUNCE = 0.74;
 
 export class Goal {
   readonly lineX: number;
@@ -28,7 +28,7 @@ export class Goal {
     const hitPost = this.resolvePost(ball, this.topPostY) || this.resolvePost(ball, this.bottomPostY);
     const insideNet = ball.y > this.topPostY && ball.y < this.bottomPostY;
     if (!insideNet) {
-      this.resolveInvisibleBarrier(ball);
+      this.resolveEndLineBarrier(ball);
       return hitPost;
     }
     if (this.side === 'left' && ball.x - ball.radius < this.backX) {
@@ -42,15 +42,14 @@ export class Goal {
     return hitPost;
   }
 
-  private resolveInvisibleBarrier(ball: Ball) {
-    const barrierX = this.lineX + (this.side === 'left' ? -BARRIER_OFFSET : BARRIER_OFFSET);
-    if (this.side === 'left' && ball.x - ball.radius < barrierX) {
-      ball.x = barrierX + ball.radius;
-      ball.vx = Math.abs(ball.vx) * .72;
+  private resolveEndLineBarrier(ball: Ball) {
+    if (this.side === 'left' && ball.x - ball.radius < this.lineX) {
+      ball.x = this.lineX + ball.radius;
+      ball.vx = Math.abs(ball.vx) * BOUNCE;
     }
-    if (this.side === 'right' && ball.x + ball.radius > barrierX) {
-      ball.x = barrierX - ball.radius;
-      ball.vx = -Math.abs(ball.vx) * .72;
+    if (this.side === 'right' && ball.x + ball.radius > this.lineX) {
+      ball.x = this.lineX - ball.radius;
+      ball.vx = -Math.abs(ball.vx) * BOUNCE;
     }
   }
 

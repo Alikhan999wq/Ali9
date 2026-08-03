@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'wouter';
 import { GameCanvas, type GameCanvasHandle } from '../components/GameCanvas';
 import { GameHud } from '../components/GameHud';
 import { MatchEventOverlay } from '../components/MatchEventOverlay';
 import { MatchResult } from '../components/MatchResult';
 import { MobileControls } from '../components/MobileControls';
+import { PauseMenu } from '../components/PauseMenu';
+import { PauseSettings } from '../components/PauseSettings';
 import { MATCH_SECONDS, TEAMS, type Difficulty, type Quality } from '../game/config';
 import type { MatchOptions, MatchSnapshot } from '../game/types';
 
@@ -28,10 +29,18 @@ const loadOptions = (): MatchOptions => ({
   quality: Number(localStorage.getItem('game-quality') || 1.5) as Quality,
 });
 
+const optionStorageKeys: Partial<Record<keyof MatchOptions, string>> = {
+  volume: 'game-volume', effectsEnabled: 'game-effects-enabled',
+  commentaryVolume: 'game-commentary-volume', commentaryEnabled: 'game-commentary',
+  crowdVolume: 'game-crowd-volume', crowdEnabled: 'game-crowd-enabled',
+};
+
 export function GamePage() {
   const canvas = useRef<GameCanvasHandle>(null);
-  const [options] = useState(loadOptions);
+  const [options, setOptions] = useState(loadOptions);
   const [paused, setPaused] = useState(false);
+  const [pauseSettingsOpen, setPauseSettingsOpen] = useState(false);
+  const [language, setLanguage] = useState(() => localStorage.getItem('game-language') || 'ru');
   const [restartKey, setRestartKey] = useState(0);
   const [match, setMatch] = useState(initialMatch);
   const stableOptions = useMemo(() => options, [options]);
@@ -40,15 +49,32 @@ export function GamePage() {
 
   useEffect(() => {
     const toggle = (event: KeyboardEvent) => {
-      if (event.code === 'KeyP' && !event.repeat) setPaused((value) => !value);
+      if (!['KeyP', 'Escape'].includes(event.code) || event.repeat) return;
+      if (paused && pauseSettingsOpen) setPauseSettingsOpen(false);
+      else {
+        setPaused((value) => !value);
+        setPauseSettingsOpen(false);
+      }
     };
     addEventListener('keydown', toggle);
     return () => removeEventListener('keydown', toggle);
-  }, []);
+  }, [paused, pauseSettingsOpen]);
+
+  const updateOption = <Key extends keyof MatchOptions>(key: Key, value: MatchOptions[Key]) => {
+    setOptions((current) => ({ ...current, [key]: value }));
+    const storageKey = optionStorageKeys[key];
+    if (storageKey) localStorage.setItem(storageKey, String(value));
+  };
+
+  const updateLanguage = (value: string) => {
+    setLanguage(value);
+    localStorage.setItem('game-language', value);
+  };
 
   const restart = () => {
     setMatch(initialMatch());
     setPaused(false);
+    setPauseSettingsOpen(false);
     setRestartKey((value) => value + 1);
   };
   return (
@@ -57,7 +83,10 @@ export function GamePage() {
         match={match}
         teamNames={[TEAMS[options.team].name, TEAMS[opponent].name]}
         teamSymbols={[TEAMS[options.team].symbol, TEAMS[opponent].symbol]}
-        onPause={() => setPaused((value) => !value)}
+        onPause={() => {
+          setPaused((value) => !value);
+          setPauseSettingsOpen(false);
+        }}
       />
       <GameCanvas ref={canvas} options={stableOptions} paused={paused} restartKey={restartKey} onSnapshot={updateSnapshot} />
       <MobileControls
@@ -67,15 +96,15 @@ export function GamePage() {
       />
       <div className="rotate-phone"><span>↻</span><b>Поверните телефон</b><small>Играть удобнее в альбомном режиме</small></div>
       {match.event && <MatchEventOverlay event={match.event} />}
-      {paused && (
-        <section className="match-modal">
-          <p className="eyebrow">МАТЧ ОСТАНОВЛЕН</p>
-          <h2>Пауза</h2>
-          <div className="match-modal__actions">
-            <button type="button" onClick={() => setPaused(false)}>Продолжить</button>
-            <Link href="/" className="secondary-button">Назад в меню</Link>
-          </div>
-        </section>
+      {paused && <PauseMenu onContinue={() => setPaused(false)} onOpenSettings={() => setPauseSettingsOpen(true)} onRestart={restart} />}
+      {paused && pauseSettingsOpen && (
+        <PauseSettings
+          options={options}
+          language={language}
+          onOptionChange={updateOption}
+          onLanguageChange={updateLanguage}
+          onClose={() => setPauseSettingsOpen(false)}
+        />
       )}
       {match.state === 'ended' && <MatchResult match={match} onRestart={restart} />}
     </main>

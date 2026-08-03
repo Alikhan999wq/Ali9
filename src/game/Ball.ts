@@ -1,5 +1,3 @@
-import { FIELD } from './config';
-
 export class Ball {
   radius = 11;
   mass = 0.43;
@@ -18,7 +16,5 @@ export class Ball {
     this.vx *= drag;
     this.vy *= drag;
     this.spin += Math.hypot(this.vx, this.vy) * dt * 0.03;
-    if (this.y - this.radius < FIELD.margin) this.vy = Math.abs(this.vy) * 0.7;
-    if (this.y + this.radius > FIELD.height - FIELD.margin) this.vy = -Math.abs(this.vy) * 0.7;
   }
 }

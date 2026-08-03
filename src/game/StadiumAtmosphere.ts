@@ -32,6 +32,19 @@ export class StadiumAtmosphere {
     this.timer = window.setInterval(() => this.tick(.05), 50);
   }
 
+  configure(volume: number, enabled: boolean) {
+    const wasEnabled = this.enabled;
+    this.volume = volume;
+    this.enabled = enabled;
+    if (!enabled) {
+      [...this.ambience, this.celebration, this.applause].forEach((audio) => audio.pause());
+      return;
+    }
+    if (!wasEnabled && this.unlocked && !this.paused) {
+      this.ambience.forEach((audio) => void audio.play().catch(() => undefined));
+    }
+  }
+
   unlock() {
     if (!this.enabled || this.unlocked) return;
     this.unlocked = true;

@@ -9,11 +9,20 @@ interface AIContext {
   players: Player[];
   difficulty: Difficulty;
   kick: (player: Player) => boolean;
+  controlsBall: (player: Player) => boolean;
 }
 
 export class AIPlayer {
  static update(player: Player, dt: number, game: AIContext) {
   const level = AI_LEVELS[game.difficulty];
+  if (game.controlsBall(player)) {
+    const aim = direction(player.team ? -1 : 1, (350 - player.y) / (350 / level.accuracy));
+    player.move(aim.x, aim.y, dt, level.speed);
+    player.faceX = aim.x;
+    player.faceY = aim.y;
+    if (Math.random() <= dt * level.reaction) game.kick(player);
+    return;
+  }
   const teammates = game.players.filter((candidate) => candidate.team === player.team);
   const closest = teammates.reduce((best, candidate) =>
     distance(candidate, game.ball) < distance(best, game.ball) ? candidate : best);

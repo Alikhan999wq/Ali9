@@ -2,6 +2,10 @@ export class GameAudio {
   private context?: AudioContext;
   constructor(private volume: number) {}
 
+  setVolume(volume: number) {
+    this.volume = volume;
+  }
+
   private tone(frequency: number, duration = 0.1, type: OscillatorType = 'sine') {
     this.context ??= new AudioContext();
     if (!this.volume) return;

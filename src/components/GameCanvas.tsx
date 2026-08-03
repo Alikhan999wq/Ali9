@@ -22,12 +22,14 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
-    const engine = new GameEngine(context, options);
+    const engine = new GameEngine(context, optionsRef.current);
     engineRef.current = engine;
     let frame = 0;
     let previous = performance.now();
@@ -36,7 +38,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
-      const ratio = Math.min(devicePixelRatio, options.quality);
+      const ratio = Math.min(devicePixelRatio, optionsRef.current.quality);
       canvas.width = Math.round(rect.width * ratio);
       canvas.height = Math.round(rect.height * ratio);
     };
@@ -76,7 +78,11 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
       removeEventListener('keyup', keyUp);
       canvas.removeEventListener('pointermove', pointerMove);
     };
-  }, [onSnapshot, options, restartKey]);
+  }, [onSnapshot, restartKey]);
+
+  useEffect(() => {
+    engineRef.current?.configureAudio(options);
+  }, [options]);
 
   useImperativeHandle(ref, () => ({
     setMove: (x, y) => engineRef.current?.setMove(x, y),
