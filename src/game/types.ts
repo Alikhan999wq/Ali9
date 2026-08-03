@@ -1,4 +1,6 @@
 import type { Difficulty, Quality } from './config';
+import type { Language, TranslationParams } from '../i18n/I18n';
+import type { TranslationKey } from '../i18n/ru';
 
 export type MatchState = 'playing' | 'paused' | 'ended';
 export type Score = [number, number];
@@ -18,9 +20,10 @@ export interface Stats {
 export interface MatchEvent {
   id: number;
   kind: 'goal' | 'foul' | 'var';
-  title: string;
-  detail: string;
-  rule?: string;
+  titleKey: TranslationKey;
+  detailKey: TranslationKey;
+  values?: TranslationParams;
+  ruleKey?: TranslationKey;
 }
 
 export interface MatchSnapshot {
@@ -41,4 +44,5 @@ export interface MatchOptions {
   crowdVolume: number;
   crowdEnabled: boolean;
   quality: Quality;
+  language: Language;
 }

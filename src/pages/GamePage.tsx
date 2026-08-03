@@ -8,6 +8,7 @@ import { PauseMenu } from '../components/PauseMenu';
 import { PauseSettings } from '../components/PauseSettings';
 import { MATCH_SECONDS, TEAMS, type Difficulty, type Quality } from '../game/config';
 import type { MatchOptions, MatchSnapshot } from '../game/types';
+import { useI18n } from '../i18n/I18n';
 
 const initialMatch = (): MatchSnapshot => ({
   state: 'playing', score: [0, 0], seconds: MATCH_SECONDS, event: null,
@@ -17,7 +18,7 @@ const initialMatch = (): MatchSnapshot => ({
   },
 });
 
-const loadOptions = (): MatchOptions => ({
+const loadOptions = (language: MatchOptions['language']): MatchOptions => ({
   team: Math.max(0, Math.min(TEAMS.length - 1, Number(localStorage.getItem('game-team') || 0))),
   difficulty: (localStorage.getItem('game-difficulty') || 'normal') as Difficulty,
   volume: Number(localStorage.getItem('game-volume') || .65),
@@ -27,6 +28,7 @@ const loadOptions = (): MatchOptions => ({
   crowdVolume: Number(localStorage.getItem('game-crowd-volume') || .65),
   crowdEnabled: localStorage.getItem('game-crowd-enabled') !== 'false',
   quality: Number(localStorage.getItem('game-quality') || 1.5) as Quality,
+  language,
 });
 
 const optionStorageKeys: Partial<Record<keyof MatchOptions, string>> = {
@@ -36,14 +38,14 @@ const optionStorageKeys: Partial<Record<keyof MatchOptions, string>> = {
 };
 
 export function GamePage() {
+  const { language, setLanguage, t } = useI18n();
   const canvas = useRef<GameCanvasHandle>(null);
-  const [options, setOptions] = useState(loadOptions);
+  const [options, setOptions] = useState(() => loadOptions(language));
   const [paused, setPaused] = useState(false);
   const [pauseSettingsOpen, setPauseSettingsOpen] = useState(false);
-  const [language, setLanguage] = useState(() => localStorage.getItem('game-language') || 'ru');
   const [restartKey, setRestartKey] = useState(0);
   const [match, setMatch] = useState(initialMatch);
-  const stableOptions = useMemo(() => options, [options]);
+  const stableOptions = useMemo(() => ({ ...options, language }), [language, options]);
   const updateSnapshot = useCallback((snapshot: MatchSnapshot) => setMatch(snapshot), []);
   const opponent = (options.team + 1) % TEAMS.length;
 
@@ -64,11 +66,6 @@ export function GamePage() {
     setOptions((current) => ({ ...current, [key]: value }));
     const storageKey = optionStorageKeys[key];
     if (storageKey) localStorage.setItem(storageKey, String(value));
-  };
-
-  const updateLanguage = (value: string) => {
-    setLanguage(value);
-    localStorage.setItem('game-language', value);
   };
 
   const restart = () => {
@@ -94,7 +91,7 @@ export function GamePage() {
         onAim={(x, y) => canvas.current?.setAim(x, y)}
         onKick={() => canvas.current?.kick()}
       />
-      <div className="rotate-phone"><span>↻</span><b>Поверните телефон</b><small>Играть удобнее в альбомном режиме</small></div>
+      <div className="rotate-phone"><span>↻</span><b>{t('mobile.rotate')}</b><small>{t('mobile.rotateHint')}</small></div>
       {match.event && <MatchEventOverlay event={match.event} />}
       {paused && <PauseMenu onContinue={() => setPaused(false)} onOpenSettings={() => setPauseSettingsOpen(true)} onRestart={restart} />}
       {paused && pauseSettingsOpen && (
@@ -102,7 +99,7 @@ export function GamePage() {
           options={options}
           language={language}
           onOptionChange={updateOption}
-          onLanguageChange={updateLanguage}
+          onLanguageChange={setLanguage}
           onClose={() => setPauseSettingsOpen(false)}
         />
       )}

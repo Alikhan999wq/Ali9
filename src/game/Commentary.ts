@@ -1,3 +1,6 @@
+import type { Language } from '../i18n/I18n';
+import { englishCommentary } from '../i18n/commentary';
+
 export type CommentaryEvent = 'start' | 'goal' | 'goal-extra' | 'danger' | 'shot' | 'save' | 'post' | 'foul' | 'yellow' | 'red' | 'end';
 
 const FILES: Record<CommentaryEvent, string[]> = {
@@ -21,6 +24,7 @@ const FILES: Record<CommentaryEvent, string[]> = {
 export class Commentary {
   private queue: CommentaryEvent[] = [];
   private current: HTMLAudioElement | null = null;
+  private currentSpeech: SpeechSynthesisUtterance | null = null;
   private unlocked = false;
   private paused = false;
   private lastPlayed = new Map<CommentaryEvent, number>();
@@ -29,17 +33,18 @@ export class Commentary {
     private onSpeakingChange: (speaking: boolean) => void,
     private volume: number,
     private enabled: boolean,
+    private language: Language,
   ) {}
 
-  configure(volume: number, enabled: boolean) {
+  configure(volume: number, enabled: boolean, language: Language) {
+    const languageChanged = this.language !== language;
     this.volume = volume;
     this.enabled = enabled;
+    this.language = language;
     if (this.current) this.current.volume = Math.min(1, volume * 1.45);
-    if (enabled) return;
+    if (enabled && !languageChanged) return;
     this.queue = [];
-    this.current?.pause();
-    this.current = null;
-    this.onSpeakingChange(false);
+    this.stopCurrent();
   }
 
   announce(event: CommentaryEvent) {
@@ -48,9 +53,7 @@ export class Commentary {
     if (now - (this.lastPlayed.get(event) || 0) < 1800) return;
     this.lastPlayed.set(event, now);
     if (event === 'goal' || event === 'end') {
-      this.current?.pause();
-      this.current = null;
-      this.onSpeakingChange(false);
+      this.stopCurrent();
       this.queue = [event];
     } else {
       this.queue.push(event);
@@ -67,9 +70,7 @@ export class Commentary {
   pause() {
     this.paused = true;
     this.queue = [];
-    this.current?.pause();
-    this.current = null;
-    this.onSpeakingChange(false);
+    this.stopCurrent();
   }
 
   resume() {
@@ -79,15 +80,17 @@ export class Commentary {
   stop() {
     this.paused = true;
     this.queue = [];
-    this.current?.pause();
-    this.current = null;
-    this.onSpeakingChange(false);
+    this.stopCurrent();
   }
 
   private playNext() {
-    if (this.paused || !this.unlocked || this.current || !this.queue.length) return;
+    if (this.paused || !this.unlocked || this.current || this.currentSpeech || !this.queue.length) return;
     const event = this.queue.shift();
     if (!event) return;
+    if (this.language === 'en' && event !== 'goal') {
+      this.playSpeech(event);
+      return;
+    }
     const variants = FILES[event];
     const file = variants[Math.floor(Math.random() * variants.length)];
     const audio = new Audio(`/assets/sounds/voice/${file}`);
@@ -97,14 +100,45 @@ export class Commentary {
     const finish = () => {
       if (this.current !== audio) return;
       this.current = null;
-      this.onSpeakingChange(false);
-      if (event === 'goal' && !this.paused) {
-        this.queue.unshift('goal-extra');
-      }
-      this.playNext();
+      this.finishEvent(event);
     };
     audio.addEventListener('ended', finish, { once: true });
     audio.addEventListener('error', finish, { once: true });
     void audio.play().catch(finish);
+  }
+
+  private playSpeech(event: CommentaryEvent) {
+    if (!('speechSynthesis' in window)) { this.finishEvent(event); return; }
+    const variants = englishCommentary[event];
+    const text = variants[Math.floor(Math.random() * variants.length)];
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = 'en-US';
+    speech.volume = this.volume;
+    speech.rate = .96;
+    speech.pitch = .88;
+    this.currentSpeech = speech;
+    this.onSpeakingChange(true);
+    const finish = () => {
+      if (this.currentSpeech !== speech) return;
+      this.currentSpeech = null;
+      this.finishEvent(event);
+    };
+    speech.addEventListener('end', finish, { once: true });
+    speech.addEventListener('error', finish, { once: true });
+    window.speechSynthesis.speak(speech);
+  }
+
+  private finishEvent(event: CommentaryEvent) {
+    this.onSpeakingChange(false);
+    if (event === 'goal' && !this.paused) this.queue.unshift('goal-extra');
+    this.playNext();
+  }
+
+  private stopCurrent() {
+    this.current?.pause();
+    this.current = null;
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    this.currentSpeech = null;
+    this.onSpeakingChange(false);
   }
 }

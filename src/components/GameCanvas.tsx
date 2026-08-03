@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { GameEngine } from '../game/GameEngine';
 import { FIELD, STEP } from '../game/config';
 import type { MatchOptions, MatchSnapshot } from '../game/types';
+import { useI18n } from '../i18n/I18n';
 
 interface GameCanvasProps {
   options: MatchOptions;
@@ -20,6 +21,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
   { options, paused, restartKey, onSnapshot },
   ref,
 ) {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const optionsRef = useRef(options);
@@ -97,5 +99,5 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
     if (paused !== isPaused) engine.pause();
   }, [paused]);
 
-  return <canvas ref={canvasRef} className="game-canvas" aria-label="Футбольное поле" />;
+  return <canvas ref={canvasRef} className="game-canvas" aria-label={t('home.quickGame')} />;
 });

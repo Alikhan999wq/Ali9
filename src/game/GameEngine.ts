@@ -12,7 +12,7 @@ import { Referee } from './Referee';
 import { renderMatch } from './render';
 import { createPlayers } from './squad';
 import { StadiumAtmosphere } from './StadiumAtmosphere';
-import type { MatchOptions, MatchSnapshot, Stats } from './types';
+import type { MatchEvent, MatchOptions, MatchSnapshot, Stats } from './types';
 
 const emptyStats = (): Stats => ({
   shots: [0, 0], onTarget: [0, 0], possession: [0, 0], passes: [0, 0],
@@ -50,6 +50,7 @@ export class GameEngine {
       (speaking) => this.atmosphere.setDucked(speaking),
       options.commentaryVolume,
       options.commentaryEnabled,
+      options.language,
     );
     this.resetPositions();
     this.commentary.announce('start');
@@ -91,8 +92,9 @@ export class GameEngine {
   snapshot(): MatchSnapshot { return structuredClone(this.state); }
 
   configureAudio(options: MatchOptions) {
+    this.options = options;
     this.audio.setVolume(options.effectsEnabled ? options.volume : 0);
-    this.commentary.configure(options.commentaryVolume, options.commentaryEnabled);
+    this.commentary.configure(options.commentaryVolume, options.commentaryEnabled, options.language);
     this.atmosphere.configure(options.crowdVolume, options.crowdEnabled);
   }
 
@@ -203,9 +205,14 @@ export class GameEngine {
     this.referee.showCard(severe); this.audio.whistle(); this.collisionCooldown = 4;
     this.commentary.announce('foul');
     this.commentary.announce(severe ? 'red' : 'yellow');
-    this.showEvent(inBox || severe ? 'var' : 'foul', severe ? 'Красная карточка' : inBox ? 'Пенальти' : 'Штрафной удар',
-      `Игрок №${offender.number} нарушил правила. ${inBox ? 'Контакт произошёл внутри штрафной площади.' : 'Зафиксирован опасный контакт.'}`,
-      'Правило 12 IFAB: нарушения и недисциплинированное поведение.', inBox || severe ? 2.8 : 1.6);
+    this.showEvent(
+      inBox || severe ? 'var' : 'foul',
+      severe ? 'event.redCard' : inBox ? 'event.penalty' : 'event.freeKick',
+      inBox ? 'event.foulInBox' : 'event.foulDanger',
+      { player: offender.number },
+      'event.rule12',
+      inBox || severe ? 2.8 : 1.6,
+    );
   }
 
   private checkFieldEvents() {
@@ -222,7 +229,7 @@ export class GameEngine {
     this.commentary.announce('goal');
     this.players.filter((player) => player.team === team).forEach((player) => { player.celebrating = 1.8; });
     this.pendingReset = true;
-    this.showEvent('goal', 'ГОЛ!', `${this.state.score[0]} : ${this.state.score[1]}`, undefined, 1.8);
+    this.showEvent('goal', 'event.goal', 'event.score', { home: this.state.score[0], away: this.state.score[1] }, undefined, 1.8);
   }
 
   private crowdIntensity() {
@@ -236,8 +243,15 @@ export class GameEngine {
     return Math.min(1, attack + shotBoost);
   }
 
-  private showEvent(kind: 'goal' | 'foul' | 'var', title: string, detail: string, rule?: string, duration = 1.6) {
-    this.state.event = { id: ++this.eventId, kind, title, detail, rule };
+  private showEvent(
+    kind: MatchEvent['kind'],
+    titleKey: MatchEvent['titleKey'],
+    detailKey: MatchEvent['detailKey'],
+    values?: MatchEvent['values'],
+    ruleKey?: MatchEvent['ruleKey'],
+    duration = 1.6,
+  ) {
+    this.state.event = { id: ++this.eventId, kind, titleKey, detailKey, values, ruleKey };
     this.eventTimer = duration;
   }
 

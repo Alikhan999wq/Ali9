@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useI18n } from '../i18n/I18n';
 
 interface TouchStickProps {
   label: string;
@@ -59,11 +60,12 @@ interface MobileControlsProps {
 }
 
 export function MobileControls({ onMove, onAim, onKick }: MobileControlsProps) {
+  const { t } = useI18n();
   return (
     <div className="mobile-controls">
-      <TouchStick label="ДВИЖЕНИЕ" onChange={onMove} />
-      <button type="button" className="mobile-kick" onPointerDown={(event) => { event.preventDefault(); onKick(); }}>УДАР</button>
-      <TouchStick label="ПРИЦЕЛ" onChange={onAim} resetOnRelease={false} />
+      <TouchStick label={t('mobile.move')} onChange={onMove} />
+      <button type="button" className="mobile-kick" onPointerDown={(event) => { event.preventDefault(); onKick(); }}>{t('mobile.kick')}</button>
+      <TouchStick label={t('mobile.aim')} onChange={onAim} resetOnRelease={false} />
     </div>
   );
 }

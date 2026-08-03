@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { SupabaseSetupMessage } from './SupabaseSetupMessage';
+import { useI18n, type TranslationKey } from '../i18n/I18n';
 
 // Вход и регистрация по email + паролю. Это пример — Codex поможет улучшить (Google-вход и т.д.).
 export function Auth() {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<TranslationKey | null>(null);
   const [busy, setBusy] = useState(false);
 
   if (!isSupabaseConfigured) return <SupabaseSetupMessage />;
@@ -15,7 +17,7 @@ export function Auth() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setMessage('');
+    setMessage(null);
     try {
       const fn =
         mode === 'signup'
@@ -26,10 +28,10 @@ export function Auth() {
             })
           : supabase.auth.signInWithPassword({ email, password });
       const { error } = await fn;
-      if (error) setMessage(error.message);
-      else if (mode === 'signup') setMessage('Готово! Проверь почту, если нужна подтверждалка.');
+      if (error) setMessage('auth.error');
+      else if (mode === 'signup') setMessage('auth.success');
     } catch {
-      setMessage('Что-то пошло не так. Попробуй ещё раз.');
+      setMessage('auth.error');
     } finally {
       setBusy(false);
     }
@@ -37,7 +39,7 @@ export function Auth() {
 
   return (
     <section className="card">
-      <h2>{mode === 'signin' ? 'Вход' : 'Регистрация'}</h2>
+      <h2>{t(mode === 'signin' ? 'auth.signIn' : 'auth.signUp')}</h2>
       <form onSubmit={handleSubmit} className="form">
         <input
           type="email"
@@ -48,22 +50,22 @@ export function Auth() {
         />
         <input
           type="password"
-          placeholder="пароль (6+ символов)"
+          placeholder={t('auth.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           minLength={6}
           required
         />
         <button type="submit" disabled={busy}>
-          {busy ? '…' : mode === 'signin' ? 'Войти' : 'Создать аккаунт'}
+          {busy ? '…' : t(mode === 'signin' ? 'auth.submitSignIn' : 'auth.submitSignUp')}
         </button>
       </form>
-      {message && <p className="message">{message}</p>}
+      {message && <p className="message">{t(message)}</p>}
       <button
         className="ghost"
         onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
       >
-        {mode === 'signin' ? 'Нет аккаунта? Зарегистрируйся' : 'Уже есть аккаунт? Войти'}
+        {t(mode === 'signin' ? 'auth.switchToSignUp' : 'auth.switchToSignIn')}
       </button>
     </section>
   );
