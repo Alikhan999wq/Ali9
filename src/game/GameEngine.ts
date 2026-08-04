@@ -1,4 +1,4 @@
-import { FIELD, MATCH_SECONDS, TEAMS } from './config';
+import { AI_LEVELS, FIELD, MATCH_SECONDS, TEAMS } from './config';
 import { updateAIPlayer } from './AIPlayer';
 import { Ball } from './Ball';
 import { BallControl } from './BallControl';
@@ -36,6 +36,8 @@ export class GameEngine {
   private eventId = 0;
   private pendingReset = false;
   private collisionCooldown = 0;
+  private activePlayerId = 0;
+  private switchCooldown = 0;
   private audio: GameAudio;
   private commentary: Commentary;
   private atmosphere: StadiumAtmosphere;
@@ -57,6 +59,7 @@ export class GameEngine {
   }
 
   key(code: string, pressed: boolean) {
+    if (pressed && code === 'KeyQ' && !this.keys.has(code)) this.switchPlayer();
     pressed ? this.keys.add(code) : this.keys.delete(code);
     if (pressed) { this.commentary.unlock(); this.atmosphere.unlock(); }
   }
@@ -76,6 +79,18 @@ export class GameEngine {
     this.manualAimTimer = 1.5;
   }
   queueKick() { this.commentary.unlock(); this.atmosphere.unlock(); this.kickQueued = true; }
+  switchPlayer() {
+    if (this.state.state !== 'playing') return;
+    const active = this.getActivePlayer();
+    const owner = this.getBallOwner();
+    if (owner?.team === 0 && owner.id === active.id) return;
+    const target = owner?.team === 0
+      ? owner
+      : this.players
+        .filter((player) => player.team === 0 && player.id !== active.id)
+        .sort((a, b) => distance(a, this.ball) - distance(b, this.ball))[0];
+    if (target) this.selectPlayer(target, .34);
+  }
   destroy() { this.commentary.stop(); this.atmosphere.destroy(); }
   pause() {
     if (this.state.state === 'ended') return;
@@ -108,9 +123,11 @@ export class GameEngine {
       this.atmosphere.finishMatch(); return;
     }
     this.collisionCooldown = Math.max(0, this.collisionCooldown - dt);
+    this.switchCooldown = Math.max(0, this.switchCooldown - dt);
     this.ballControl.updateTimers(dt);
     this.manualAimTimer = Math.max(0, this.manualAimTimer - dt);
-    const human = this.players[0];
+    this.autoSelectPlayer();
+    const human = this.getActivePlayer();
     const dx = Number(this.keys.has('KeyD')) - Number(this.keys.has('KeyA')) + this.mobile.x;
     const dy = Number(this.keys.has('KeyS')) - Number(this.keys.has('KeyW')) + this.mobile.y;
     human.move(dx, dy, dt);
@@ -124,7 +141,7 @@ export class GameEngine {
       this.audio.kick();
     }
     this.kickQueued = false;
-    this.players.slice(1).forEach((player) => updateAIPlayer(player, dt, {
+    this.players.filter((player) => player.id !== this.activePlayerId).forEach((player) => updateAIPlayer(player, dt, {
       ball: this.ball, players: this.players, difficulty: this.options.difficulty,
       kick: (candidate) => {
         const kicked = this.tryKick(candidate);
@@ -145,12 +162,45 @@ export class GameEngine {
 
   draw() {
     const opponent = (this.options.team + 1) % TEAMS.length;
-    const showAim = this.ballControl.isOwnedBy(this.players[0]);
+    const showAim = this.ballControl.isOwnedBy(this.getActivePlayer());
     renderMatch(this.context, this.players, this.ball, this.referee, this.elapsed, this.options.team, opponent, showAim ? this.aim : null);
   }
 
   private getBallOwner() {
-    return this.ballControl.ownerId === null ? undefined : this.players[this.ballControl.ownerId];
+    return this.ballControl.ownerId === null
+      ? undefined
+      : this.players.find((player) => player.id === this.ballControl.ownerId);
+  }
+
+  private getActivePlayer() {
+    return this.players.find((player) => player.id === this.activePlayerId) ?? this.players[0];
+  }
+
+  private selectPlayer(player: Player, cooldown = .5) {
+    if (player.team !== 0 || player.id === this.activePlayerId) return;
+    this.activePlayerId = player.id;
+    this.players.forEach((candidate) => { candidate.controlled = candidate.id === player.id; });
+    this.aim = player.getAimDirection();
+    this.manualAimTimer = 0;
+    this.switchCooldown = cooldown;
+  }
+
+  private autoSelectPlayer() {
+    if (!this.options.autoSwitch || this.switchCooldown > 0) return;
+    const active = this.getActivePlayer();
+    const owner = this.getBallOwner();
+    if (owner?.team === 0) {
+      if (owner.id !== active.id) this.selectPlayer(owner);
+      return;
+    }
+    const defending = owner?.team === 1 || (owner === undefined && this.ball.lastTouch === 1);
+    if (!defending) return;
+    const closest = this.players
+      .filter((player) => player.team === 0)
+      .sort((a, b) => distance(a, this.ball) - distance(b, this.ball))[0];
+    if (!closest || closest.id === active.id) return;
+    const improvement = distance(active, this.ball) - distance(closest, this.ball);
+    if (improvement > 75 || distance(active, this.ball) > 190) this.selectPlayer(closest, .55);
   }
 
   private tryKick(player: Player, aim?: { x: number; y: number }, power = 570, shot = true) {
@@ -190,7 +240,11 @@ export class GameEngine {
     const nearOwnGoal = player.team === 0 ? player.x < 255 : player.x > FIELD.width - 255;
     if (incomingSpeed > 260 && nearOwnGoal && this.ball.lastTouch !== player.team) this.commentary.announce('save');
     const previous = this.ball.lastPlayer;
-    const captured = this.ballControl.tryCapture(player, this.ball, this.getBallOwner());
+    const owner = this.getBallOwner();
+    const tackleSuccess = owner && owner.team !== player.team && player.team === 1
+      ? AI_LEVELS[this.options.difficulty].tackle
+      : 1;
+    const captured = this.ballControl.tryCapture(player, this.ball, owner, tackleSuccess);
     if (captured && previous !== null && previous !== player.id && this.players[previous]?.team === player.team) {
       this.state.stats.passes[player.team]++;
     }
@@ -266,6 +320,9 @@ export class GameEngine {
 
   private resetPositions() {
     this.players = createPlayers();
+    this.activePlayerId = this.players[0].id;
+    this.players.forEach((player) => { player.controlled = player.id === this.activePlayerId; });
+    this.switchCooldown = 0;
     this.ballControl.reset(); this.ball = new Ball(600, 350); this.referee = new Referee();
   }
 }

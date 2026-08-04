@@ -15,6 +15,7 @@ export interface GameCanvasHandle {
   setMove: (x: number, y: number) => void;
   setAim: (x: number, y: number) => void;
   kick: () => void;
+  switchPlayer: () => void;
 }
 
 export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function GameCanvas(
@@ -90,6 +91,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
     setMove: (x, y) => engineRef.current?.setMove(x, y),
     setAim: (x, y) => engineRef.current?.setAimDirection(x, y),
     kick: () => engineRef.current?.queueKick(),
+    switchPlayer: () => engineRef.current?.switchPlayer(),
   }), []);
 
   useEffect(() => {

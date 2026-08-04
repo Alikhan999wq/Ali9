@@ -14,6 +14,7 @@ export function SettingsPage() {
   const [crowdVolume, setCrowdVolume] = useState(Number(localStorage.getItem('game-crowd-volume') || .65));
   const [crowdEnabled, setCrowdEnabled] = useState(localStorage.getItem('game-crowd-enabled') !== 'false');
   const [effectsEnabled, setEffectsEnabled] = useState(localStorage.getItem('game-effects-enabled') !== 'false');
+  const [autoSwitch, setAutoSwitch] = useState(localStorage.getItem('game-auto-switch') !== 'false');
 
   const save = (key: string, value: string | number | boolean) => localStorage.setItem(key, String(value));
 
@@ -33,6 +34,7 @@ export function SettingsPage() {
         <label>{t('settings.difficulty')} <select value={difficulty} onChange={(event) => { const value = event.target.value as Difficulty; setDifficulty(value); save('game-difficulty', value); }}>
           <option value="easy">{t('settings.easy')}</option><option value="normal">{t('settings.normal')}</option><option value="hard">{t('settings.hard')}</option>
         </select></label>
+        <label>{t('settings.autoSwitch')} <input type="checkbox" checked={autoSwitch} onChange={(event) => { setAutoSwitch(event.target.checked); save('game-auto-switch', event.target.checked); }} /></label>
         <label>{t('settings.voice')} <input type="checkbox" checked={commentary} onChange={(event) => { setCommentary(event.target.checked); save('game-commentary', event.target.checked); }} /></label>
         <label>{t('settings.crowd')} <input type="checkbox" checked={crowdEnabled} onChange={(event) => { setCrowdEnabled(event.target.checked); save('game-crowd-enabled', event.target.checked); }} /></label>
         <label>{t('settings.gameSounds')} <input type="checkbox" checked={effectsEnabled} onChange={(event) => { setEffectsEnabled(event.target.checked); save('game-effects-enabled', event.target.checked); }} /></label>

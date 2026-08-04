@@ -29,12 +29,14 @@ const loadOptions = (language: MatchOptions['language']): MatchOptions => ({
   crowdEnabled: localStorage.getItem('game-crowd-enabled') !== 'false',
   quality: Number(localStorage.getItem('game-quality') || 1.5) as Quality,
   language,
+  autoSwitch: localStorage.getItem('game-auto-switch') !== 'false',
 });
 
 const optionStorageKeys: Partial<Record<keyof MatchOptions, string>> = {
   volume: 'game-volume', effectsEnabled: 'game-effects-enabled',
   commentaryVolume: 'game-commentary-volume', commentaryEnabled: 'game-commentary',
   crowdVolume: 'game-crowd-volume', crowdEnabled: 'game-crowd-enabled',
+  autoSwitch: 'game-auto-switch',
 };
 
 export function GamePage() {
@@ -90,6 +92,7 @@ export function GamePage() {
         onMove={(x, y) => canvas.current?.setMove(x, y)}
         onAim={(x, y) => canvas.current?.setAim(x, y)}
         onKick={() => canvas.current?.kick()}
+        onSwitch={() => canvas.current?.switchPlayer()}
       />
       <div className="rotate-phone"><span>↻</span><b>{t('mobile.rotate')}</b><small>{t('mobile.rotateHint')}</small></div>
       {match.event && <MatchEventOverlay event={match.event} />}

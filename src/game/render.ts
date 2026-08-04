@@ -78,8 +78,13 @@ export function renderPlayer(context: CanvasRenderingContext2D, player: Player, 
   context.fillStyle = '#fff'; context.font = '700 13px Inter'; context.textAlign = 'center';
   context.fillText(String(player.number), 0, 5);
   if (player.controlled) {
-    context.strokeStyle = '#d9f36a'; context.beginPath();
-    context.moveTo(-8, -29); context.lineTo(0, -21); context.lineTo(8, -29); context.stroke();
+    context.save();
+    context.shadowColor = '#eaff5c'; context.shadowBlur = 14;
+    context.strokeStyle = '#efff67'; context.lineWidth = 3;
+    context.beginPath(); context.arc(0, 0, player.radius + 7, 0, Math.PI * 2); context.stroke();
+    context.fillStyle = '#efff67'; context.beginPath();
+    context.moveTo(-10, -37); context.lineTo(10, -37); context.lineTo(0, -24); context.closePath(); context.fill();
+    context.restore();
   }
   if (player.card) {
     context.fillStyle = player.card > 1 ? '#ef3e35' : '#f4cf35';

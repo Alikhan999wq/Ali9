@@ -21,7 +21,7 @@ export class Player {
     public readonly team: number,
     public readonly number: number,
     public readonly id: number,
-    public readonly controlled = false,
+    public controlled = false,
   ) {
     this.faceX = team === 0 ? 1 : -1;
   }

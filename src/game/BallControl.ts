@@ -23,7 +23,7 @@ export class BallControl {
     return this.ownerId === player.id;
   }
 
-  tryCapture(player: Player, ball: Ball, currentOwner?: Player) {
+  tryCapture(player: Player, ball: Ball, currentOwner?: Player, tackleSuccess = 1) {
     const touching = distance(player, ball) < player.radius + ball.radius + 1;
     if (!touching || player.falling > 0) return false;
     if (this.ownerId === player.id) return false;
@@ -31,6 +31,7 @@ export class BallControl {
     if (currentOwner) {
       if (currentOwner.team === player.team || this.tackleTimer > 0) return false;
       this.tackleTimer = TACKLE_LOCK_SECONDS;
+      if (Math.random() > tackleSuccess) return false;
     }
 
     this.ownerId = player.id;

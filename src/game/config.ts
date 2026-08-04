@@ -17,8 +17,17 @@ export const TEAMS = [
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type Quality = 1 | 1.5 | 2;
-export const AI_LEVELS: Record<Difficulty, { speed: number; accuracy: number; reaction: number }> = {
-  easy: { speed: 0.5, accuracy: 0.38, reaction: 0.8 },
-  normal: { speed: 0.65, accuracy: 0.54, reaction: 1.35 },
-  hard: { speed: 0.8, accuracy: 0.68, reaction: 2 },
+export interface AILevel {
+  speed: number;
+  accuracy: number;
+  reaction: number;
+  tackle: number;
+  mistake: number;
+  decisionDelay: number;
+}
+
+export const AI_LEVELS: Record<Difficulty, AILevel> = {
+  easy: { speed: 0.42, accuracy: 0.25, reaction: 0.45, tackle: 0.22, mistake: 0.3, decisionDelay: 0.42 },
+  normal: { speed: 0.56, accuracy: 0.42, reaction: 0.85, tackle: 0.42, mistake: 0.18, decisionDelay: 0.28 },
+  hard: { speed: 0.7, accuracy: 0.6, reaction: 1.3, tackle: 0.62, mistake: 0.08, decisionDelay: 0.18 },
 };

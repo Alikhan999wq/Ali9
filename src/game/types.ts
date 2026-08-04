@@ -45,4 +45,5 @@ export interface MatchOptions {
   crowdEnabled: boolean;
   quality: Quality;
   language: Language;
+  autoSwitch: boolean;
 }

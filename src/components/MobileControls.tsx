@@ -57,14 +57,18 @@ interface MobileControlsProps {
   onMove: (x: number, y: number) => void;
   onAim: (x: number, y: number) => void;
   onKick: () => void;
+  onSwitch: () => void;
 }
 
-export function MobileControls({ onMove, onAim, onKick }: MobileControlsProps) {
+export function MobileControls({ onMove, onAim, onKick, onSwitch }: MobileControlsProps) {
   const { t } = useI18n();
   return (
     <div className="mobile-controls">
       <TouchStick label={t('mobile.move')} onChange={onMove} />
-      <button type="button" className="mobile-kick" onPointerDown={(event) => { event.preventDefault(); onKick(); }}>{t('mobile.kick')}</button>
+      <div className="mobile-actions">
+        <button type="button" className="mobile-switch" onPointerDown={(event) => { event.preventDefault(); onSwitch(); }}>{t('mobile.switch')}</button>
+        <button type="button" className="mobile-kick" onPointerDown={(event) => { event.preventDefault(); onKick(); }}>{t('mobile.kick')}</button>
+      </div>
       <TouchStick label={t('mobile.aim')} onChange={onAim} resetOnRelease={false} />
     </div>
   );
