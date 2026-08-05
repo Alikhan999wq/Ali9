@@ -305,12 +305,6 @@
   align-self: end; justify-self: center; display: flex; align-items: center; gap: 12px;
   pointer-events: none;
 }
-.mobile-switch {
-  width: 58px; height: 40px; padding: 0 7px; border: 2px solid #efffb07d; border-radius: 14px;
-  pointer-events: auto; touch-action: none; color: #efffb0; background: #0b1b10dc;
-  font-size: 9px; font-weight: 950; letter-spacing: .06em; box-shadow: 0 7px 20px #0008;
-}
-.mobile-switch:active { transform: translateY(2px) scale(.96); background: #243d19; }
 .mobile-kick {
   width: 84px; height: 84px; margin-bottom: 13px; padding: 0;
   border: 3px solid #ecffad99; border-radius: 50%; pointer-events: auto; touch-action: none;
@@ -389,5 +383,4 @@
   .mobile-stick { width: 92px; height: 92px; }
   .mobile-stick i { left: 27px; top: 27px; width: 34px; height: 34px; }
   .mobile-kick { width: 72px; height: 72px; margin-bottom: 12px; }
-  .mobile-switch { width: 52px; height: 36px; font-size: 8px; }
 }

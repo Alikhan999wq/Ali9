@@ -46,10 +46,6 @@ export function PauseSettings({ options, language, onOptionChange, onLanguageCha
             <span>{t('pause.voice')}</span>
             <input type="checkbox" checked={options.commentaryEnabled} onChange={(event) => onOptionChange('commentaryEnabled', event.target.checked)} />
           </label>
-          <label className="pause-settings__row pause-settings__toggle">
-            <span>{t('settings.autoSwitch')}</span>
-            <input type="checkbox" checked={options.autoSwitch} onChange={(event) => onOptionChange('autoSwitch', event.target.checked)} />
-          </label>
           <label className="pause-settings__row">
             <span>{t('settings.language')}</span>
             <select value={language} onChange={(event) => onLanguageChange(event.target.value as Language)}>

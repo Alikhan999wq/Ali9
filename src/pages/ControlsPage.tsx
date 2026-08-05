@@ -4,7 +4,6 @@ import { useI18n, type TranslationKey } from '../i18n/I18n';
 const controls: [string, TranslationKey][] = [
   ['W', 'controls.forward'], ['S', 'controls.backward'],
   ['A', 'controls.left'], ['D', 'controls.right'],
-  ['Q', 'controls.switch'],
   ['E', 'controls.pass'], ['controls.space', 'controls.shot'],
 ];
 

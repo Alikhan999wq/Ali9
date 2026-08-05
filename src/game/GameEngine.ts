@@ -37,7 +37,6 @@ export class GameEngine {
   private pendingReset = false;
   private collisionCooldown = 0;
   private activePlayerId = 0;
-  private switchCooldown = 0;
   private audio: GameAudio;
   private commentary: Commentary;
   private atmosphere: StadiumAtmosphere;
@@ -59,7 +58,6 @@ export class GameEngine {
   }
 
   key(code: string, pressed: boolean) {
-    if (pressed && code === 'KeyQ' && !this.keys.has(code)) this.switchPlayer();
     pressed ? this.keys.add(code) : this.keys.delete(code);
     if (pressed) { this.commentary.unlock(); this.atmosphere.unlock(); }
   }
@@ -79,18 +77,6 @@ export class GameEngine {
     this.manualAimTimer = 1.5;
   }
   queueKick() { this.commentary.unlock(); this.atmosphere.unlock(); this.kickQueued = true; }
-  switchPlayer() {
-    if (this.state.state !== 'playing') return;
-    const active = this.getActivePlayer();
-    const owner = this.getBallOwner();
-    if (owner?.team === 0 && owner.id === active.id) return;
-    const target = owner?.team === 0
-      ? owner
-      : this.players
-        .filter((player) => player.team === 0 && player.id !== active.id)
-        .sort((a, b) => distance(a, this.ball) - distance(b, this.ball))[0];
-    if (target) this.selectPlayer(target, .34);
-  }
   destroy() { this.commentary.stop(); this.atmosphere.destroy(); }
   pause() {
     if (this.state.state === 'ended') return;
@@ -123,7 +109,6 @@ export class GameEngine {
       this.atmosphere.finishMatch(); return;
     }
     this.collisionCooldown = Math.max(0, this.collisionCooldown - dt);
-    this.switchCooldown = Math.max(0, this.switchCooldown - dt);
     this.ballControl.updateTimers(dt);
     this.manualAimTimer = Math.max(0, this.manualAimTimer - dt);
     this.autoSelectPlayer();
@@ -176,31 +161,24 @@ export class GameEngine {
     return this.players.find((player) => player.id === this.activePlayerId) ?? this.players[0];
   }
 
-  private selectPlayer(player: Player, cooldown = .5) {
+  private selectPlayer(player: Player) {
     if (player.team !== 0 || player.id === this.activePlayerId) return;
     this.activePlayerId = player.id;
     this.players.forEach((candidate) => { candidate.controlled = candidate.id === player.id; });
     this.aim = player.getAimDirection();
     this.manualAimTimer = 0;
-    this.switchCooldown = cooldown;
   }
 
   private autoSelectPlayer() {
-    if (!this.options.autoSwitch || this.switchCooldown > 0) return;
-    const active = this.getActivePlayer();
     const owner = this.getBallOwner();
     if (owner?.team === 0) {
-      if (owner.id !== active.id) this.selectPlayer(owner);
+      this.selectPlayer(owner);
       return;
     }
-    const defending = owner?.team === 1 || (owner === undefined && this.ball.lastTouch === 1);
-    if (!defending) return;
     const closest = this.players
       .filter((player) => player.team === 0)
       .sort((a, b) => distance(a, this.ball) - distance(b, this.ball))[0];
-    if (!closest || closest.id === active.id) return;
-    const improvement = distance(active, this.ball) - distance(closest, this.ball);
-    if (improvement > 75 || distance(active, this.ball) > 190) this.selectPlayer(closest, .55);
+    if (closest) this.selectPlayer(closest);
   }
 
   private tryKick(player: Player, aim?: { x: number; y: number }, power = 570, shot = true) {
@@ -322,7 +300,6 @@ export class GameEngine {
     this.players = createPlayers();
     this.activePlayerId = this.players[0].id;
     this.players.forEach((player) => { player.controlled = player.id === this.activePlayerId; });
-    this.switchCooldown = 0;
     this.ballControl.reset(); this.ball = new Ball(600, 350); this.referee = new Referee();
   }
 }
