@@ -413,12 +413,30 @@
   .football-brand strong { font-size: 25px; }
   .football-brand b { font-size: 21px; }
   .menu-screen { background-position: 62% center; }
-  .menu-window { width: calc(100% - 32px); min-height: 100vh; margin: 0 auto; padding-top: 38px; }
+  .menu-window {
+    width: calc(100% - 32px); min-height: 100vh; margin: 0 auto;
+    padding: max(38px, env(safe-area-inset-top)) 0 max(32px, env(safe-area-inset-bottom));
+  }
   .menu-window__back { margin-bottom: 34px; }
   .settings-list label { align-items: stretch; flex-direction: column; gap: 8px; }
   .settings-list input, .settings-list select { width: 100%; max-width: none; }
   .menu-window--wide { width: calc(100% - 24px); }
   .teams-grid, .maps-grid { grid-template-columns: 1fr; }
+  .maps-grid { gap: 10px; }
+  .map-card { display: grid; grid-template-columns: minmax(112px, 38%) minmax(0, 1fr); }
+  .map-card:hover { transform: none; }
+  .map-preview { height: 100%; min-height: 164px; }
+  .map-preview::before { inset: 15px 10px; }
+  .map-preview::after { top: 15px; bottom: 15px; }
+  .map-preview > i { width: 40px; height: 40px; }
+  .map-preview > span, .map-preview > b { width: 31px; height: 58px; }
+  .map-preview > span { left: 10px; }
+  .map-preview > b { right: 10px; }
+  .map-card__body { min-width: 0; padding: 13px; }
+  .map-card h2 { font-size: 17px; }
+  .map-card p { min-height: 0; font-size: 11px; }
+  .map-card small { margin: 8px 0; line-height: 1.35; }
+  .map-card button { min-height: 44px; padding: 9px; touch-action: manipulation; }
   .club-card__top { grid-template-columns: 68px 1fr; }
   .teams-actions { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
   .teams-back, .teams-start { min-width: 0; flex: 1; padding-inline: 10px; }
@@ -436,6 +454,7 @@
 @media (pointer: coarse) {
   .mobile-controls { display: grid; }
   button, a { -webkit-tap-highlight-color: transparent; }
+  .map-card:hover, .club-card:hover { transform: none; }
 }
 @media (pointer: coarse) and (orientation: portrait) {
   .rotate-phone { display: flex; }

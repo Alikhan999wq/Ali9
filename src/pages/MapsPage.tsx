@@ -30,7 +30,7 @@ export function MapsPage() {
               <h2>{t(map.nameKey)}</h2>
               <p>{t(map.descriptionKey)}</p>
               <small>{t(map.atmosphereKey)} · {map.field.width} × {map.field.height}</small>
-              <button type="button" onClick={() => select(map.id)}>
+              <button type="button" aria-pressed={selected === map.id} onClick={() => select(map.id)}>
                 {selected === map.id ? t('maps.selected') : t('maps.select')}
               </button>
             </div>
