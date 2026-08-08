@@ -1,4 +1,38 @@
 .eyebrow { color: var(--clay); font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.auth-page, .auth-loading {
+  position: fixed; inset: 0; display: grid; place-items: center; overflow: auto; padding: 24px;
+  color: #f4f7f2; background: #050a08 url('/assets/menu-stadium.png') center/cover no-repeat;
+}
+.auth-page::before { content: ''; position: fixed; inset: 0; background: #020705d9; backdrop-filter: blur(5px); }
+.auth-loading .football-brand__ball { font-size: 58px; animation: replay 1.2s ease-in-out infinite alternate; }
+.auth-panel {
+  position: relative; z-index: 1; width: min(430px, 100%); padding: 34px;
+  border: 1px solid #dfff7233; border-radius: 12px;
+  background: linear-gradient(145deg, #111a15f7, #070c09fa); box-shadow: 0 24px 70px #000c;
+}
+.auth-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; }
+.auth-brand .football-brand__ball { font-size: 37px; }
+.auth-brand div { display: grid; line-height: 1; }
+.auth-brand strong { font-size: 20px; font-style: italic; }
+.auth-brand b { color: #a8d930; font-size: 13px; letter-spacing: .13em; }
+.auth-panel h1 { margin: 6px 0 20px; font-size: 38px; font-style: italic; text-transform: uppercase; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 18px; border-bottom: 1px solid #ffffff17; }
+.auth-tabs button {
+  padding: 11px 6px; border-radius: 0; color: #8e9991; background: transparent; font-size: 12px;
+  border-bottom: 2px solid transparent;
+}
+.auth-tabs button.active { color: #dfff72; border-bottom-color: #a8d930; }
+.auth-form { display: grid; gap: 14px; }
+.auth-form label { display: grid; gap: 7px; color: #b9c1bb; font-size: 12px; font-weight: 800; }
+.auth-form input {
+  width: 100%; border: 1px solid #ffffff1d; border-radius: 5px; color: #f4f7f2;
+  background: #040806d9; outline: none;
+}
+.auth-form input:focus { border-color: #a8d930; box-shadow: 0 0 0 3px #a8d93018; }
+.auth-error { color: #ff997d; font-size: 13px; line-height: 1.35; }
+.auth-submit { border-radius: 5px; color: #0b130c; background: linear-gradient(90deg, #b9e539, #8fbd1e); }
+.auth-guest { width: 100%; margin-top: 10px; border: 1px solid #ffffff1c; border-radius: 5px; color: #c2cac4; background: transparent; }
+.auth-guest:hover { border-color: #b9e53977; color: #dfff72; }
 .football-home {
   position: fixed; inset: 0; overflow: hidden; color: #f5f7f3;
   background: #050a08 url('/assets/menu-stadium.png') center/cover no-repeat;
@@ -18,6 +52,15 @@
 .football-brand strong { grid-row: 1; grid-column: 1 / -1; font-size: 31px; font-style: italic; letter-spacing: .02em; }
 .football-brand b { color: #a8d930; font-size: 25px; font-style: italic; }
 .football-brand small { color: #e5e9e3; font-size: 10px; letter-spacing: .36em; }
+.football-account {
+  min-height: 50px; margin-bottom: 14px; padding: 8px 10px 8px 15px; display: flex; align-items: center; justify-content: space-between;
+  border-left: 3px solid #a8d930; background: #101713df;
+}
+.football-account span { display: grid; gap: 2px; min-width: 0; }
+.football-account small { color: #77837b; font-size: 8px; font-weight: 900; letter-spacing: .14em; }
+.football-account b { overflow: hidden; color: #dfff72; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.football-account button { padding: 7px 10px; border: 1px solid #ffffff18; border-radius: 3px; color: #aab3ac; background: transparent; font-size: 10px; }
+.football-account button:hover { color: #fff; border-color: #ffffff44; }
 .football-nav { display: grid; gap: 5px; }
 .football-nav__item {
   width: 100%; min-height: 46px; padding: 0 17px; display: flex; align-items: center; gap: 14px;
@@ -110,6 +153,47 @@
   color: #dfe5df; background: #ffffff0b; border: 1px solid #ffffff12; border-radius: 3px; font-size: 11px; letter-spacing: .08em;
 }
 .club-card > button:hover, .club-card--active > button { color: #0b130c; background: linear-gradient(90deg, #b9e539, #8fbd1e); }
+.maps-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.map-card {
+  overflow: hidden; border: 1px solid #ffffff16; border-radius: 9px;
+  background: linear-gradient(145deg, rgba(23, 31, 27, .97), rgba(7, 12, 10, .96));
+  box-shadow: 0 12px 34px #0006; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.map-card:hover { transform: translateY(-5px); border-color: #b9e53966; box-shadow: 0 18px 40px #0009; }
+.map-card--active { border-color: #b9e539; box-shadow: 0 0 0 1px #b9e53955, 0 20px 48px #000a; }
+.map-preview { position: relative; height: 150px; overflow: hidden; background: var(--map-bg); }
+.map-preview::before {
+  content: ''; position: absolute; inset: 18px 25px; border: 2px solid var(--map-line);
+  background: repeating-linear-gradient(90deg, var(--map-surface) 0 45px, var(--map-light) 45px 90px);
+  box-shadow: 0 0 32px var(--map-dark);
+}
+.map-preview::after {
+  content: ''; position: absolute; left: 50%; top: 18px; bottom: 18px; width: 2px;
+  background: var(--map-line); transform: translateX(-50%); box-shadow: 0 0 8px var(--map-line);
+}
+.map-preview > i {
+  position: absolute; z-index: 1; left: 50%; top: 50%; width: 54px; height: 54px;
+  border: 2px solid var(--map-line); border-radius: 50%; transform: translate(-50%, -50%);
+}
+.map-preview > span, .map-preview > b {
+  position: absolute; z-index: 1; top: 50%; width: 48px; height: 70px;
+  border: 2px solid var(--map-line); transform: translateY(-50%);
+}
+.map-preview > span { left: 25px; border-left: 0; }
+.map-preview > b { right: 25px; border-right: 0; }
+.map-preview--wood::before { background: repeating-linear-gradient(0deg, var(--map-surface) 0 16px, var(--map-light) 17px, var(--map-dark) 18px); }
+.map-preview--sand::before { background: radial-gradient(circle at 20% 30%, #fff4 0 1px, transparent 2px), var(--map-surface); background-size: 18px 16px; }
+.map-preview--night { box-shadow: inset 0 0 55px #000; }
+.map-preview--night::before { box-shadow: 0 0 26px #4ce6ff55; }
+.map-card__body { padding: 17px; }
+.map-card h2 { margin-bottom: 7px; font-size: 20px; }
+.map-card p { min-height: 38px; color: #929c95; font-size: 12px; line-height: 1.45; }
+.map-card small { display: block; margin: 12px 0; color: #c2cf9c; font-size: 10px; }
+.map-card button {
+  width: 100%; padding: 10px; border: 1px solid #ffffff17; border-radius: 3px;
+  color: #dfe5df; background: #ffffff0b; font-size: 11px; letter-spacing: .08em;
+}
+.map-card button:hover, .map-card--active button { color: #0b130c; background: linear-gradient(90deg, #b9e539, #8fbd1e); }
 .teams-actions {
   position: sticky; z-index: 4; bottom: 0; margin-top: 24px; padding: 18px 0;
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
@@ -334,7 +418,7 @@
   .settings-list label { align-items: stretch; flex-direction: column; gap: 8px; }
   .settings-list input, .settings-list select { width: 100%; max-width: none; }
   .menu-window--wide { width: calc(100% - 24px); }
-  .teams-grid { grid-template-columns: 1fr; }
+  .teams-grid, .maps-grid { grid-template-columns: 1fr; }
   .club-card__top { grid-template-columns: 68px 1fr; }
   .teams-actions { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
   .teams-back, .teams-start { min-width: 0; flex: 1; padding-inline: 10px; }

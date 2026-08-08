@@ -1,6 +1,6 @@
-import { FIELD } from './config';
 import { clamp, direction, distance } from './math';
 import { Ball } from './Ball';
+import type { FieldGeometry } from './maps';
 
 export class Player {
   radius = 19;
@@ -22,6 +22,7 @@ export class Player {
     public readonly number: number,
     public readonly id: number,
     public controlled = false,
+    private readonly field: FieldGeometry,
   ) {
     this.faceX = team === 0 ? 1 : -1;
   }
@@ -40,8 +41,8 @@ export class Player {
       this.vx *= 0.84;
       this.vy *= 0.84;
     }
-    this.x = clamp(this.x + this.vx * dt, FIELD.margin + this.radius, FIELD.width - FIELD.margin - this.radius);
-    this.y = clamp(this.y + this.vy * dt, FIELD.margin + this.radius, FIELD.height - FIELD.margin - this.radius);
+    this.x = clamp(this.x + this.vx * dt, this.field.margin + this.radius, this.field.width - this.field.margin - this.radius);
+    this.y = clamp(this.y + this.vy * dt, this.field.margin + this.radius, this.field.height - this.field.margin - this.radius);
     this.kickTime = Math.max(0, this.kickTime - dt);
     this.celebrating = Math.max(0, this.celebrating - dt);
     this.falling = Math.max(0, this.falling - dt);

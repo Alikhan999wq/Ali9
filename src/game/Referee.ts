@@ -1,11 +1,17 @@
 import { direction } from './math';
+import type { FieldGeometry } from './maps';
 
 export class Referee {
-  x = 600;
-  y = 220;
+  x: number;
+  y: number;
   private vx = 0;
   private vy = 0;
   card: 0 | 1 | 2 = 0;
+
+  constructor(field: FieldGeometry) {
+    this.x = field.width / 2;
+    this.y = field.height * .315;
+  }
 
   update(ball: { x: number; y: number }, dt: number) {
     const aim = direction(ball.x - this.x, ball.y - 110 - this.y);

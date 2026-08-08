@@ -1,6 +1,7 @@
 import type { Difficulty, Quality } from './config';
 import type { Language, TranslationParams } from '../i18n/I18n';
 import type { TranslationKey } from '../i18n/ru';
+import type { MapId } from './maps';
 
 export type MatchState = 'playing' | 'paused' | 'ended';
 export type Score = [number, number];
@@ -36,6 +37,7 @@ export interface MatchSnapshot {
 
 export interface MatchOptions {
   team: number;
+  mapId: MapId;
   difficulty: Difficulty;
   volume: number;
   effectsEnabled: boolean;

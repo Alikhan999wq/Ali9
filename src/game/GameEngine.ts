@@ -1,4 +1,4 @@
-import { AI_LEVELS, FIELD, MATCH_SECONDS, TEAMS } from './config';
+import { AI_LEVELS, MATCH_SECONDS, TEAMS } from './config';
 import { updateAIPlayer } from './AIPlayer';
 import { Ball } from './Ball';
 import { BallControl } from './BallControl';
@@ -12,6 +12,7 @@ import { Referee } from './Referee';
 import { renderMatch } from './render';
 import { createPlayers } from './squad';
 import { StadiumAtmosphere } from './StadiumAtmosphere';
+import { getMapConfig, type MapConfig } from './maps';
 import type { MatchEvent, MatchOptions, MatchSnapshot, Stats } from './types';
 
 const emptyStats = (): Stats => ({
@@ -21,11 +22,12 @@ const emptyStats = (): Stats => ({
 
 export class GameEngine {
   private players: Player[] = [];
-  private ball = new Ball(600, 350);
+  private ball: Ball;
   private ballControl = new BallControl();
-  private referee = new Referee();
-  private fieldBoundary = new FieldBoundary();
-  private goals = [new Goal('left'), new Goal('right')];
+  private referee: Referee;
+  private fieldBoundary: FieldBoundary;
+  private goals: [Goal, Goal];
+  private readonly map: MapConfig;
   private keys = new Set<string>();
   private mobile = { x: 0, y: 0 };
   private aim = { x: 1, y: 0 };
@@ -45,6 +47,12 @@ export class GameEngine {
   };
 
   constructor(private context: CanvasRenderingContext2D, private options: MatchOptions) {
+    this.map = getMapConfig(options.mapId);
+    const { field } = this.map;
+    this.ball = new Ball(field.width / 2, field.height / 2);
+    this.referee = new Referee(field);
+    this.fieldBoundary = new FieldBoundary(field);
+    this.goals = [new Goal('left', field), new Goal('right', field)];
     this.audio = new GameAudio(options.effectsEnabled ? options.volume : 0);
     this.atmosphere = new StadiumAtmosphere(options.crowdVolume, options.crowdEnabled);
     this.commentary = new Commentary(
@@ -128,6 +136,7 @@ export class GameEngine {
     this.kickQueued = false;
     this.players.filter((player) => player.id !== this.activePlayerId).forEach((player) => updateAIPlayer(player, dt, {
       ball: this.ball, players: this.players, difficulty: this.options.difficulty,
+      field: this.map.field,
       kick: (candidate) => {
         const kicked = this.tryKick(candidate);
         if (kicked) this.audio.kick();
@@ -148,7 +157,7 @@ export class GameEngine {
   draw() {
     const opponent = (this.options.team + 1) % TEAMS.length;
     const showAim = this.ballControl.isOwnedBy(this.getActivePlayer());
-    renderMatch(this.context, this.players, this.ball, this.referee, this.elapsed, this.options.team, opponent, showAim ? this.aim : null);
+    renderMatch(this.context, this.players, this.ball, this.referee, this.elapsed, this.options.team, opponent, showAim ? this.aim : null, this.map);
   }
 
   private getBallOwner() {
@@ -188,7 +197,7 @@ export class GameEngine {
     if (shot) this.state.stats.shots[player.team]++;
     this.state.stats.passAttempts[player.team]++;
     const towardGoal = player.team === 0 ? this.ball.vx > 180 : this.ball.vx < -180;
-    const dangerous = towardGoal && Math.abs(this.ball.y - FIELD.height / 2) < FIELD.goalWidth * .55;
+    const dangerous = towardGoal && Math.abs(this.ball.y - this.map.field.height / 2) < this.map.field.goalWidth * .55;
     if (shot && towardGoal) this.atmosphere.reactToShot();
     if (shot && dangerous) {
       this.state.stats.onTarget[player.team]++;
@@ -215,7 +224,8 @@ export class GameEngine {
   private touchBall(player: Player) {
     if (distance(player, this.ball) >= player.radius + this.ball.radius + 1) return;
     const incomingSpeed = Math.hypot(this.ball.vx, this.ball.vy);
-    const nearOwnGoal = player.team === 0 ? player.x < 255 : player.x > FIELD.width - 255;
+    const dangerDepth = this.map.field.margin + this.map.field.width * .17;
+    const nearOwnGoal = player.team === 0 ? player.x < dangerDepth : player.x > this.map.field.width - dangerDepth;
     if (incomingSpeed > 260 && nearOwnGoal && this.ball.lastTouch !== player.team) this.commentary.announce('save');
     const previous = this.ball.lastPlayer;
     const owner = this.getBallOwner();
@@ -231,7 +241,8 @@ export class GameEngine {
   private callFoul(a: Player, b: Player) {
     const offender = Math.hypot(a.vx, a.vy) > Math.hypot(b.vx, b.vy) ? a : b;
     const victim = offender === a ? b : a, severe = Math.random() > .78;
-    const inBox = offender.team ? offender.x > 955 : offender.x < 245;
+    const boxDepth = this.map.field.margin + this.map.field.width * .16;
+    const inBox = offender.team ? offender.x > this.map.field.width - boxDepth : offender.x < boxDepth;
     offender.card += severe ? 2 : 1; victim.falling = 1;
     this.state.stats.fouls[offender.team]++; this.state.stats.cards[offender.team]++;
     this.referee.showCard(severe); this.audio.whistle(); this.collisionCooldown = 4;
@@ -267,8 +278,8 @@ export class GameEngine {
   private crowdIntensity() {
     const team = this.ball.lastTouch;
     if (team === null) return 0;
-    const progress = team === 0 ? this.ball.x / FIELD.width : 1 - this.ball.x / FIELD.width;
-    const central = Math.max(.25, 1 - Math.abs(this.ball.y - FIELD.height / 2) / (FIELD.height * .55));
+    const progress = team === 0 ? this.ball.x / this.map.field.width : 1 - this.ball.x / this.map.field.width;
+    const central = Math.max(.25, 1 - Math.abs(this.ball.y - this.map.field.height / 2) / (this.map.field.height * .55));
     const attack = Math.max(0, (progress - .48) / .52) * central;
     const towardGoal = team === 0 ? this.ball.vx > 120 : this.ball.vx < -120;
     const shotBoost = towardGoal ? Math.min(.35, Math.abs(this.ball.vx) / 1300) : 0;
@@ -297,10 +308,11 @@ export class GameEngine {
   }
 
   private resetPositions() {
-    this.players = createPlayers();
+    const { field } = this.map;
+    this.players = createPlayers(field);
     this.activePlayerId = this.players[0].id;
     this.players.forEach((player) => { player.controlled = player.id === this.activePlayerId; });
-    this.ballControl.reset(); this.ball = new Ball(600, 350); this.referee = new Referee();
+    this.ballControl.reset(); this.ball = new Ball(field.width / 2, field.height / 2); this.referee = new Referee(field);
   }
 }
 

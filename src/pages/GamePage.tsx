@@ -9,6 +9,7 @@ import { PauseSettings } from '../components/PauseSettings';
 import { MATCH_SECONDS, TEAMS, type Difficulty, type Quality } from '../game/config';
 import type { MatchOptions, MatchSnapshot } from '../game/types';
 import { useI18n } from '../i18n/I18n';
+import { DEFAULT_MAP_ID, isMapId } from '../game/maps';
 
 const initialMatch = (): MatchSnapshot => ({
   state: 'playing', score: [0, 0], seconds: MATCH_SECONDS, event: null,
@@ -18,18 +19,22 @@ const initialMatch = (): MatchSnapshot => ({
   },
 });
 
-const loadOptions = (language: MatchOptions['language']): MatchOptions => ({
-  team: Math.max(0, Math.min(TEAMS.length - 1, Number(localStorage.getItem('game-team') || 0))),
-  difficulty: (localStorage.getItem('game-difficulty') || 'normal') as Difficulty,
-  volume: Number(localStorage.getItem('game-volume') || .65),
-  effectsEnabled: localStorage.getItem('game-effects-enabled') !== 'false',
-  commentaryVolume: Number(localStorage.getItem('game-commentary-volume') || .75),
-  commentaryEnabled: localStorage.getItem('game-commentary') !== 'false',
-  crowdVolume: Number(localStorage.getItem('game-crowd-volume') || .65),
-  crowdEnabled: localStorage.getItem('game-crowd-enabled') !== 'false',
-  quality: Number(localStorage.getItem('game-quality') || 1.5) as Quality,
-  language,
-});
+const loadOptions = (language: MatchOptions['language']): MatchOptions => {
+  const savedMap = localStorage.getItem('game-map');
+  return {
+    team: Math.max(0, Math.min(TEAMS.length - 1, Number(localStorage.getItem('game-team') || 0))),
+    mapId: isMapId(savedMap) ? savedMap : DEFAULT_MAP_ID,
+    difficulty: (localStorage.getItem('game-difficulty') || 'normal') as Difficulty,
+    volume: Number(localStorage.getItem('game-volume') || .65),
+    effectsEnabled: localStorage.getItem('game-effects-enabled') !== 'false',
+    commentaryVolume: Number(localStorage.getItem('game-commentary-volume') || .75),
+    commentaryEnabled: localStorage.getItem('game-commentary') !== 'false',
+    crowdVolume: Number(localStorage.getItem('game-crowd-volume') || .65),
+    crowdEnabled: localStorage.getItem('game-crowd-enabled') !== 'false',
+    quality: Number(localStorage.getItem('game-quality') || 1.5) as Quality,
+    language,
+  };
+};
 
 const optionStorageKeys: Partial<Record<keyof MatchOptions, string>> = {
   volume: 'game-volume', effectsEnabled: 'game-effects-enabled',

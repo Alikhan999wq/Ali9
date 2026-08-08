@@ -41,7 +41,7 @@ export function TeamsPage() {
       </div>
       <div className="teams-actions">
         <Link href="/" className="teams-back">← {t('common.back')}</Link>
-        {selected !== null && <Link href="/game" className="teams-start">{t('teams.start')} →</Link>}
+        {selected !== null && <Link href="/maps" className="teams-start">{t('teams.start')} →</Link>}
       </div>
     </MenuScreen>
   );

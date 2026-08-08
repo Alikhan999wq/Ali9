@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { GameEngine } from '../game/GameEngine';
-import { FIELD, STEP } from '../game/config';
+import { STEP } from '../game/config';
+import { getMapConfig } from '../game/maps';
 import type { MatchOptions, MatchSnapshot } from '../game/types';
 import { useI18n } from '../i18n/I18n';
 
@@ -32,6 +33,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
     const engine = new GameEngine(context, optionsRef.current);
+    const field = getMapConfig(optionsRef.current.mapId).field;
     engineRef.current = engine;
     let frame = 0;
     let previous = performance.now();
@@ -53,9 +55,9 @@ export const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(function
       const rect = canvas.getBoundingClientRect();
       const canvasX = (event.clientX - rect.left) * canvas.width / rect.width;
       const canvasY = (event.clientY - rect.top) * canvas.height / rect.height;
-      const scale = Math.min(canvas.width / FIELD.width, canvas.height / FIELD.height);
-      const offsetX = (canvas.width - FIELD.width * scale) / 2;
-      const offsetY = (canvas.height - FIELD.height * scale) / 2;
+      const scale = Math.min(canvas.width / field.width, canvas.height / field.height);
+      const offsetX = (canvas.width - field.width * scale) / 2;
+      const offsetY = (canvas.height - field.height * scale) / 2;
       engine.setAimPoint((canvasX - offsetX) / scale, (canvasY - offsetY) / scale);
     };
     const loop = (now: number) => {

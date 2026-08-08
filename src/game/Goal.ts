@@ -1,19 +1,19 @@
-import { FIELD } from './config';
 import type { Ball } from './Ball';
+import type { FieldGeometry } from './maps';
 
-const POST_RADIUS = 7;
-const GOAL_DEPTH = 48;
 const BOUNCE = 0.74;
 
 export class Goal {
   readonly lineX: number;
-  readonly topPostY = (FIELD.height - FIELD.goalWidth) / 2;
-  readonly bottomPostY = this.topPostY + FIELD.goalWidth;
+  readonly topPostY: number;
+  readonly bottomPostY: number;
   readonly backX: number;
 
-  constructor(readonly side: 'left' | 'right') {
-    this.lineX = side === 'left' ? FIELD.margin : FIELD.width - FIELD.margin;
-    this.backX = this.lineX + (side === 'left' ? -GOAL_DEPTH : GOAL_DEPTH);
+  constructor(readonly side: 'left' | 'right', private readonly field: FieldGeometry) {
+    this.lineX = side === 'left' ? field.margin : field.width - field.margin;
+    this.topPostY = (field.height - field.goalWidth) / 2;
+    this.bottomPostY = this.topPostY + field.goalWidth;
+    this.backX = this.lineX + (side === 'left' ? -field.goalDepth : field.goalDepth);
   }
 
   crossedCompletelyBy(ball: Ball) {
@@ -57,7 +57,7 @@ export class Goal {
     const dx = ball.x - this.lineX;
     const dy = ball.y - postY;
     const distance = Math.hypot(dx, dy);
-    const minimum = ball.radius + POST_RADIUS;
+    const minimum = ball.radius + this.field.postRadius;
     if (distance >= minimum) return false;
     const nx = distance ? dx / distance : (this.side === 'left' ? 1 : -1);
     const ny = distance ? dy / distance : 0;

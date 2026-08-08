@@ -1,4 +1,3 @@
-export const FIELD = { width: 1200, height: 700, margin: 55, goalWidth: 230 };
 export const MATCH_SECONDS = 90;
 export const STEP = 1 / 60;
 

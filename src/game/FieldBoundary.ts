@@ -1,12 +1,14 @@
 import type { Ball } from './Ball';
-import { FIELD } from './config';
+import type { FieldGeometry } from './maps';
 
 const BOUNCE = 0.74;
 
 export class FieldBoundary {
+  constructor(private readonly field: FieldGeometry) {}
+
   resolveSidelineCollisions(ball: Ball) {
-    const top = FIELD.margin;
-    const bottom = FIELD.height - FIELD.margin;
+    const top = this.field.margin;
+    const bottom = this.field.height - this.field.margin;
     let collided = false;
 
     if (ball.y - ball.radius < top) {
