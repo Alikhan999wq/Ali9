@@ -1,4 +1,4 @@
-const ROOT = '/assets/sounds/crowd/';
+const ROOT = `${import.meta.env.BASE_URL}assets/sounds/crowd/`;
 
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 

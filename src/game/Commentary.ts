@@ -93,7 +93,7 @@ export class Commentary {
     }
     const variants = FILES[event];
     const file = variants[Math.floor(Math.random() * variants.length)];
-    const audio = new Audio(`/assets/sounds/voice/${file}`);
+    const audio = new Audio(`${import.meta.env.BASE_URL}assets/sounds/voice/${file}`);
     audio.volume = event === 'goal' ? Math.min(1, this.volume * 1.45) : this.volume;
     this.current = audio;
     this.onSpeakingChange(true);
